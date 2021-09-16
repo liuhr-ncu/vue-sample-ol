@@ -16,6 +16,54 @@ import FeatureManagerFactory from './feature/FeatureManagerFactory';
 import {OSM} from 'ol/source';
 import FeatureManagerPool from '@/components/ol/FeatureManagerPool';
 
+const features = {
+  person: [{
+    id: 1,
+    name: '张三',
+    lng: 114.064839,
+    lat: 22.648857,
+    alarm: true,
+    online: false
+  }, {
+    id: 2,
+    name: '李四',
+    lng: 114.068839,
+    lat: 22.658857,
+    alarm: false,
+    online: true
+  }],
+  plat: [{
+    id: 1,
+    name: '平台A',
+    lng: 114.034839,
+    lat: 22.668857,
+    alarm: true,
+    online: true
+  }, {
+    id: 2,
+    name: '平台B',
+    lng: 114.038839,
+    lat: 22.658857,
+    alarm: false,
+    online: false
+  }],
+  ship: [{
+    id: 1,
+    name: '船舶A',
+    lng: 114.044839,
+    lat: 22.648857,
+    alarm: true,
+    online: true
+  }, {
+    id: 2,
+    name: '船舶B',
+    lng: 114.048839,
+    lat: 22.658857,
+    alarm: false,
+    online: true
+  }]
+}
+
 export default {
   name: 'Map',
   components: {InfoWindow},
@@ -39,52 +87,7 @@ export default {
         'ship.click': ({data}) => {
           alert("单击船舶:" + data.name)
         }
-      },
-      person: [{
-        id: 1,
-        name: '张三',
-        lng: 114.064839,
-        lat: 22.548857,
-        alarm: true,
-        online: false
-      }, {
-        id: 2,
-        name: '李四',
-        lng: 114.068839,
-        lat: 22.558857,
-        alarm: false,
-        online: true
-      }],
-      plat: [{
-        id: 1,
-        name: '平台A',
-        lng: 114.034839,
-        lat: 22.448857,
-        alarm: true,
-        online: true
-      }, {
-        id: 2,
-        name: '平台B',
-        lng: 114.038839,
-        lat: 22.458857,
-        alarm: false,
-        online: false
-      }],
-      ship: [{
-        id: 1,
-        name: '船舶A',
-        lng: 114.044839,
-        lat: 22.648857,
-        alarm: true,
-        online: true
-      }, {
-        id: 2,
-        name: '船舶B',
-        lng: 114.048839,
-        lat: 22.658857,
-        alarm: false,
-        online: true
-      }]
+      }
     };
   },
   mounted () {
@@ -134,7 +137,7 @@ export default {
     },
 
     _initFeatures () {
-      let {manager, person, plat, ship} = this;
+      let {manager} = this, {person, plat, ship} = features;
       let featureManagerPool = manager.getFeatureManagerPool();
       let personFeatureManager = featureManagerPool.get('person');
       let platFeatureManager = featureManagerPool.get('plat');
@@ -147,7 +150,7 @@ export default {
 
     _startRun() {
       setInterval(() => {
-        let {person, plat, ship} = this, all = [...person, ...plat,  ...ship];
+        let {person, plat, ship} = features, all = [...person, ...plat,  ...ship];
         //修改经纬度
         all.forEach(item => {
           let {lng,lat} = item;
@@ -155,7 +158,7 @@ export default {
           lat += Math.random() * 0.000005;
           Object.assign(item, {lng, lat});
         });
-        //更新位置
+        //! 还需要更新位置
         this._initFeatures();
       }, 50);
     }
