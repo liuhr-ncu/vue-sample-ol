@@ -243,8 +243,18 @@ class FeatureManager {
    *
    * @returns {*}
    */
-  getTemplate () {
-    return Optional.of(this._infoWindow).map(infoWindow => infoWindow.template).orElse(undefined);
+  getTemplate (feature) {
+    let template = Optional.of(this._infoWindow).map(infoWindow => infoWindow.template).orElse(undefined);
+    if (typeof template === 'function') {
+      Assert.isTrue(feature, "要素不能为空");
+      let id = feature.getId();
+      Assert.isTrue(id, '要素ID不能为空');
+      let attributes = this.getAttributesById(id);
+      do {
+        template = template.call(this, attributes);
+      } while (typeof template === 'function');
+    }
+    return template;
   }
 
   /**

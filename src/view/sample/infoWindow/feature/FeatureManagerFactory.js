@@ -81,10 +81,10 @@ class FeatureManagerFactory {
         let {lng, lat} = attributes;
         return new Point([lng, lat]);
       },
-      infoWindow: {
+      /*infoWindow: {
         manager,
         template: ShipInfoWindow
-      },
+      },*/
       style: commonStyle
     });
   }

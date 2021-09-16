@@ -54,23 +54,32 @@ class InfoWindowManager {
     feature && (type = feature.get('type'), id = undefined);
     let featureManager = this._featureManagerPool.get(type);
     Assert.isTrue(featureManager, '获取要素管理器失败: type = ' + type);
-    feature || (feature = featureManager.getFeatureById(id));
-    Assert.isTrue(feature, '获取要素失败: id = ' + id);
+    feature || (feature = featureManager.getFeatureById(id), Assert.isTrue(feature, '获取要素失败: id = ' + id));
+    //打开的弹窗要素是同一个要素则什么都不做
     if (this._feature === feature) {
       return this;
     }
+    //该要素没有配置弹窗则什么都不做
+    let template = featureManager.getTemplate(feature);
+    if (!template) {
+      return this;
+    }
 
+    //居中显示
     if (center) {
       let map = featureManager.getMap(), view = map.getView();
       let position = olExtent.getCenter(feature.getGeometry().getExtent());
       view.setCenter(position);
     }
 
+    //被关闭的要素
     let close = undefined;
     if (this._feature) {
       close = {type: this.getType(), attributes: this.getAttributes()};
     }
+    //打开要素
     this._feature = feature;
+    //打开的要素
     let open = {type, attributes: this.getAttributes()}, data = {open, close};
     //触发弹窗open事件
     this.dispatchEvent({type: 'infoWindow.open', data, render: true});
@@ -129,17 +138,10 @@ class InfoWindowManager {
    * @returns {*}
    */
   getTemplate () {
+    let {_feature} = this;
+    Assert.isTrue(_feature, '要素不能为空');
     let featureManager = this.getFeatureManager();
-    let template = featureManager.getTemplate();
-    if (typeof template === 'function') {
-      let id = this.getId();
-      Assert.isTrue(id, '要素ID不能为空');
-      let attributes = featureManager.getAttributesById(id);
-      do {
-        template = template.call(featureManager, attributes);
-      } while (typeof template === 'function');
-    }
-    return template;
+    return featureManager.getTemplate(_feature);
   }
 
   /**
