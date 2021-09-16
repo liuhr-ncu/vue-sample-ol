@@ -46,9 +46,9 @@ export default {
       immediate: true
     },
     feature (now, old) {
-      old && old.set('opened', false);
+      old && old.set('active', false);
       now && (
-        now.set('opened', true),
+        now.set('active', true),
         this.template = this.manager.getTemplate(),
         this.attributes = this.manager.getAttributes()
       );

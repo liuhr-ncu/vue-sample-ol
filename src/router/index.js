@@ -2,7 +2,7 @@
 import VueRouter from 'vue-router'
 import Vue from 'vue'
 
-import Map from "../view/test/Map";
+import InfoWindowSample from "../view/sample/infoWindow/index";
 
 // 1.通过Vue.use(插件), 安装插件
 Vue.use(VueRouter)
@@ -12,11 +12,11 @@ const routes = [
     {
         path: '',
         // redirect重定向
-        redirect: '/map'
+        redirect: '/info-window-sample'
     },
     {
-        path: '/map',
-        component: Map
+        path: '/info-window-sample',
+        component: InfoWindowSample
     }
 ]
 const router = new VueRouter({

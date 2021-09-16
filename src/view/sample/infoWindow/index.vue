@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import InfoWindow from '../../components/ol/InfoWindow';
-import InfoWindowManager from '../../components/ol/InfoWindowManager';
+import InfoWindow from '../../../components/ol/InfoWindow';
+import InfoWindowManager from '../../../components/ol/InfoWindowManager';
 import 'ol/ol.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
@@ -153,12 +153,14 @@ export default {
         let {person, plat, ship} = features, all = [...person, ...plat,  ...ship];
         //修改经纬度
         all.forEach(item => {
-          let {lng,lat} = item;
+          let {lng, lat, alarm, online} = item;
           lng += Math.random() * 0.00001;
           lat += Math.random() * 0.000005;
-          Object.assign(item, {lng, lat});
+          //alarm = !alarm;
+          //online = !online;
+          Object.assign(item, {lng, lat, alarm, online});
         });
-        //! 还需要更新位置
+        //! 这里更新位置
         this._initFeatures();
       }, 50);
     }
