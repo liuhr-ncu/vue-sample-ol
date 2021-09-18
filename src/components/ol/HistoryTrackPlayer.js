@@ -42,6 +42,7 @@ class HistoryTrackPlayer {
         Assert.isTrue(featureManagerPool.has(featureType.track), "未找到轨迹线要素管理器");
         Assert.isTrue(featureManagerPool.has(featureType.point), "未找到轨迹点要素管理器");
 
+        //
         this._data = [];
         this._index = 0;
         this._timer = undefined;
