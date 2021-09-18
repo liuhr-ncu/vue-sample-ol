@@ -147,7 +147,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatures (filter) {
-    let {_type, _source, _data, _infoWindow} = this, {manager = undefined} = _infoWindow, attributes, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, attributes, feature;
+    _infoWindow && (manager = _infoWindow.manager);
     let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
     let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
     for (let _id in _data) {
@@ -168,7 +169,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureByIds (array) {
-    let {_type, _source, _data, _infoWindow} = this, {manager = undefined} = _infoWindow, _id, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, _id, feature;
+    _infoWindow && (manager = _infoWindow.manager);
     let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
     let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
     for (let index = 0, length = array.length; index < length; index++) {
@@ -187,7 +189,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureById (_id) {
-    let {_type, _source, _data, _infoWindow} = this, {manager = undefined} = _infoWindow, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, feature;
+    _infoWindow && (manager = _infoWindow.manager);
     let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
     let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
     type === _type && id === _id && manager.close();
@@ -202,7 +205,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   clear () {
-    let {_type, _source, _infoWindow} = this, {manager = undefined} = _infoWindow;
+    let {_type, _source, _infoWindow} = this, manager;
+    _infoWindow && (manager = _infoWindow.manager);
     let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
     type === _type && manager.close();
     this._data = {};
@@ -215,7 +219,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   hide () {
-    let {_type, _layer, _infoWindow} = this, {manager = undefined} = _infoWindow;
+    let {_type, _layer, _infoWindow} = this, manager;
+    _infoWindow && (manager = _infoWindow.manager);
     let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
     type === _type && manager.close();
     _layer.setVisible(false);
@@ -229,6 +234,13 @@ class FeatureManager {
   show () {
     this._layer.setVisible(true);
     return this;
+  }
+
+  /**
+   * 重绘
+   */
+  changed() {
+    this._source.changed();
   }
 
   /**
