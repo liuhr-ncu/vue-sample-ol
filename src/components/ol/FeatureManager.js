@@ -3,7 +3,7 @@ import Cluster from 'ol/source/Cluster';
 import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import {Style, Icon, Text, Fill} from 'ol/style';
-import {Assert, Optional} from './CommonUtils';
+import {Assert} from './CommonUtils';
 
 import clusterImg1 from './img/cl1.png';
 import clusterImg2 from './img/cl2.png';
@@ -56,6 +56,8 @@ const getStyles = style => {
   }
   return {singleStyle, clusterStyle};
 };
+
+const defaultOffset = [0, 0];
 
 class FeatureManager {
 
@@ -136,7 +138,7 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   addFeature (attributes) {
-    let {_key, _data} = this, id = _key.call(this, attributes), old = _data[id];
+    let {_data, _key} = this, id = _key.call(null, attributes), old = _data[id];
     old ? this._updateFeature(attributes, old) : this._addFeature(attributes);
     return this;
   }
@@ -147,13 +149,12 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatures (filter) {
-    let {_type, _source, _data, _infoWindow} = this, manager, attributes, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, attributes, feature, type, id;
     _infoWindow && (manager = _infoWindow.manager);
-    let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
-    let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
+    manager && (type = manager.getType(), id = manager.getId());
     for (let _id in _data) {
       attributes = _data[_id];
-      filter.call(this, attributes) && (
+      filter.call(null, attributes) && (
         (type === _type && id === _id && manager.close()),
         delete _data[id],
         feature = _source.getFeatureById(_id),
@@ -169,10 +170,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureByIds (array) {
-    let {_type, _source, _data, _infoWindow} = this, manager, _id, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, _id, feature, type, id;
     _infoWindow && (manager = _infoWindow.manager);
-    let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
-    let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
+    manager && (type = manager.getType(), id = manager.getId());
     for (let index = 0, length = array.length; index < length; index++) {
       _id = array[index];
       type === _type && id === _id && manager.close();
@@ -189,10 +189,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureById (_id) {
-    let {_type, _source, _data, _infoWindow} = this, manager, feature;
+    let {_type, _source, _data, _infoWindow} = this, manager, feature, type, id;
     _infoWindow && (manager = _infoWindow.manager);
-    let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
-    let id = Optional.of(manager).map(m => m.getId()).orElse(undefined);
+    manager && (type = manager.getType(), id = manager.getId());
     type === _type && id === _id && manager.close();
     delete _data[_id];
     feature = _source.getFeatureById(_id);
@@ -205,9 +204,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   clear () {
-    let {_type, _source, _infoWindow} = this, manager;
+    let {_type, _source, _infoWindow} = this, manager, type;
     _infoWindow && (manager = _infoWindow.manager);
-    let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
+    manager && (type = manager.getType());
     type === _type && manager.close();
     this._data = {};
     _source.clear();
@@ -219,9 +218,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   hide () {
-    let {_type, _layer, _infoWindow} = this, manager;
+    let {_type, _layer, _infoWindow} = this, manager, type;
     _infoWindow && (manager = _infoWindow.manager);
-    let type = Optional.of(manager).map(m => m.getType()).orElse(undefined);
+    manager && (type = manager.getType());
     type === _type && manager.close();
     _layer.setVisible(false);
     return this;
@@ -253,17 +252,39 @@ class FeatureManager {
 
   /**
    *
+   * @param feature
+   * @returns {*}
+   */
+  getOffset(feature) {
+    let {_infoWindow} = this, offset;
+    _infoWindow && (offset = _infoWindow.offset);
+    if (typeof offset === 'function') {
+      Assert.isTrue(feature, "要素不能为空");
+      let id = feature.getId();
+      Assert.isTrue(id, "要素ID不能为空");
+      let attributes = this.getAttributesById(id);
+      do {
+        offset = offset.call(null, attributes);
+      } while (typeof offset === 'function');
+    }
+    offset || (offset = defaultOffset)
+    return offset;
+  }
+
+  /**
+   *
    * @returns {*}
    */
   getTemplate (feature) {
-    let template = Optional.of(this._infoWindow).map(infoWindow => infoWindow.template).orElse(undefined);
+    let {_infoWindow} = this, template;
+    _infoWindow && (template = _infoWindow.template);
     if (typeof template === 'function') {
       Assert.isTrue(feature, "要素不能为空");
       let id = feature.getId();
-      Assert.isTrue(id, '要素ID不能为空');
+      Assert.isTrue(id, "要素ID不能为空");
       let attributes = this.getAttributesById(id);
       do {
-        template = template.call(this, attributes);
+        template = template.call(null, attributes);
       } while (typeof template === 'function');
     }
     return template;
@@ -322,103 +343,90 @@ class FeatureManager {
 
   /**
    *
-   * @param manager
    * @param type
    * @param classify
+   * @param separator
    * @param clusterStyle
    * @param zIndex
-   * @param cluster
-   * @param distance
-   * @param visible
-   * @returns {FeatureManager}
-   */
-  merge (manager, {
-    type,
-    classify,
-    clusterStyle = defaultClusterStyle,
-    zIndex = 999,
-    cluster = true,
-    distance = 50,
-    visible = true
-  }) {
-    return FeatureManager.merges({type, classify, clusterStyle, zIndex, cluster, distance, visible}, this, manager);
-  }
-
-  /**
-   *
-   * @param type
-   * @param classify
-   * @param clusterStyle
-   * @param zIndex
-   * @param cluster
    * @param distance
    * @param visible
    * @param managers
    * @returns {FeatureManager}
    */
-  static merges ({
+  static cluster ({
     type,
     classify,
+    separator = '#',
     clusterStyle = defaultClusterStyle,
     zIndex = 999,
-    cluster = true,
     distance = 50,
     visible = true
-  }, ...managers) {
-    const _map = managers.reduce((obj, _manager) => {
-      let _type = _manager.getType();
-      Assert.isFalse(_manager.isUsed(), '合并失败， 要素管理器已被使用: type = ' + _type);
-      obj[_type] = _manager;
+  }, ...featureManagers) {
+
+    const featureManagerMap = featureManagers.reduce((obj, featureManager) => {
+      let _type = featureManager.getType();
+      Assert.isFalse(featureManager.isUsed(), '合并失败， 要素管理器已被使用: type = ' + _type);
+      obj[_type] = featureManager;
       return obj;
     }, {});
 
     const getManagerByAttributes = attributes => {
       let _type = classify.call(null, attributes);
-      let _manager = _map[_type];
-      Assert.isTrue(_manager, '未找到要素管理器: type = ' + _type);
-      return _manager;
+      let featureManager = featureManagerMap[_type];
+      Assert.isTrue(featureManager, '未找到要素管理器: type = ' + _type);
+      return featureManager;
     };
 
     const getManagerByFeature = feature => {
-      let id = feature.getId(), index = id.indexOf('#');
+      let id = feature.getId(), index = id.indexOf(separator);
       let _type = id.substring(0, index);
-      let _manager = _map[_type];
-      Assert.isTrue(_manager, '未找到要素管理器: type = ' + _type);
-      return _manager;
+      let featureManager = featureManagerMap[_type];
+      Assert.isTrue(featureManager, '未找到要素管理器: type = ' + _type);
+      return featureManager;
     };
 
-    type || (type = managers.map(_manager => _manager.getType()).join('#'));
+    type || (type = featureManagers.map(featureManager => featureManager.getType()).join(separator));
     const key = function (attributes) {
-      let _manager = getManagerByAttributes(attributes);
-      return _manager.getType() + '#' + _manager._key.call(this, attributes);
+      let featureManager = getManagerByAttributes(attributes);
+      return featureManager.getType() + separator + featureManager._key.call(null, attributes);
     };
 
-    const geometry = function (attributes) {
-      let _manager = getManagerByAttributes(attributes);
-      return _manager._geometry.call(this, attributes);
+    const geometry = attributes => {
+      let featureManager = getManagerByAttributes(attributes);
+      return featureManager._geometry.call(null, attributes);
     };
 
-    const template = function (attributes) {
-      let _manager = getManagerByAttributes(attributes), _infoWindow = _manager._infoWindow;
-      let _template = Optional.of(_infoWindow).map(w => w.template).orElse(undefined);
+    const offset = attributes => {
+      let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _offset;
+      _infoWindow && (_offset = infoWindow.offset);
+      while (typeof _offset === 'function') {
+        _offset = _offset.call(null, attributes);
+      }
+      return _offset;
+    };
+
+    const template = attributes => {
+      let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _template;
+      _infoWindow && (_template = infoWindow.template);
       while (typeof _template === 'function') {
-        _template = _template.call(this, attributes);
+        _template = _template.call(null, attributes);
       }
       return _template;
     };
 
-    const manager = managers.reduce((obj, _manager) => {
-      let _infoWindow = _manager._infoWindow, _infoWindowManager = Optional.of(_infoWindow).map(w => w.manager).orElse(undefined);
+    const manager = featureManagers.reduce((obj, featureManager) => {
+      let _infoWindow = featureManager._infoWindow, _infoWindowManager;
+      _infoWindow && (_infoWindowManager = _infoWindow.manager);
       Assert.isFalse(obj && _infoWindowManager && (obj != _infoWindowManager), '错误，出现多个弹窗管理器');
       return _infoWindowManager || obj;
     }, undefined);
 
-    const infoWindow = manager ? {template, manager} : undefined;
+    const infoWindow = manager ? {manager, template, offset} : undefined;
 
     const style = {
       single: function (feature) {
-        let _manager = getManagerByFeature(feature);
-        return _manager._singleStyle.call(this, feature);
+        let featureManager = getManagerByFeature(feature);
+        return featureManager._singleStyle.call(this, feature);
       },
       cluster: clusterStyle
     };
@@ -430,10 +438,11 @@ class FeatureManager {
       infoWindow,
       style,
       zIndex,
-      cluster,
+      cluster: true,
       distance,
       visible
     });
+
   }
 
   /**
@@ -453,8 +462,8 @@ class FeatureManager {
    * @private
    */
   _addFeaturesUsingObj (obj) {
-    for (let key in obj) {
-      this.addFeature(obj[key]);
+    for (let i in obj) {
+      this.addFeature(obj[i]);
     }
   }
 
@@ -464,10 +473,10 @@ class FeatureManager {
    * @private
    */
   _addFeature (attributes) {
-    let {_type, _key, _source, _geometry, _data} = this, id = _key.call(this, attributes);
+    let {_type, _key, _source, _geometry, _data} = this, id = _key.call(null, attributes);
     _data[id] = attributes;
     const feature = new Feature({
-      geometry: _geometry.call(this, attributes)
+      geometry: _geometry.call(null, attributes)
     });
     feature.setId(id);
     feature.set('type', _type);
@@ -482,9 +491,9 @@ class FeatureManager {
    */
   _updateFeature (attributes, old) {
     Object.assign(old, attributes);
-    let {_key, _source, _geometry} = this, id = _key.call(this, attributes);
+    let {_key, _source, _geometry} = this, id = _key.call(null, attributes);
     const feature = _source.getFeatureById(id);
-    feature.setGeometry(_geometry.call(this, old));
+    feature.setGeometry(_geometry.call(null, old));
   }
 
   /**

@@ -1,6 +1,17 @@
 <template>
   <div class="map-wrap">
     <div class='map'  id='map'></div>
+    <info-window :manager="manager"></info-window>
+    <div style="position: absolute;top: 20px;left: 90px;width: 700px;background: #9e9e9eed;padding: 8px;border-radius: 5px;">
+      <input type="range" step="1" min="0" :max="playerLength" v-model="progress" v-on:input="progressChangeHandle" style="width: 700px"/>
+      <button @click="speedUpHandle">速度+</button>
+      <button v-if="playerStatus" @click="pauseHandle">暂停</button>
+      <button v-else @click="playHandle">播放</button>
+      <button @click="speedDownHandle">速度-</button>
+      <span>当前速度: {{speed}}</span>
+      <span v-if="attribute">当前时间: {{attribute.createTime}},  {{attribute.lng}},{{attribute.lat}}</span>
+    </div>
+
   </div>
 </template>
 
@@ -9,6 +20,9 @@
 import 'ol/ol.css';
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
+
+import InfoWindow from '@/components/ol/InfoWindow';
+import InfoWindowManager from '@/components/ol/InfoWindowManager';
 
 import FeatureManagerFactory from './feature/FeatureManagerFactory';
 import {OSM} from 'ol/source';
@@ -58,10 +72,15 @@ const track = [
 
 export default {
   name: 'Map',
+  components: {InfoWindow},
   data () {
     return {
       map: undefined,
-      player: undefined
+      manager: undefined,
+      player: undefined,
+      progress: 0,
+      attribute: undefined,
+      speed: 15
     };
   },
   mounted () {
@@ -70,10 +89,39 @@ export default {
     this._initMap();
     //初始轨迹播放器
     this._initPlayer();
-    //模拟轨迹回放
-    this._startRun();
+    //设置轨迹
+    this._setTrack();
   },
   methods: {
+
+    speedUpHandle() {
+      let {speed} = this;
+      if (speed < 20) {
+        speed += 1;
+        this.speed = speed;
+        this.player.setInterval(630 - 30 * speed);
+      }
+    },
+    speedDownHandle() {
+      let {speed} = this;
+      if (speed > 1) {
+        speed -= 1;
+        this.speed = speed;
+        this.player.setInterval(630 - 30 * speed);
+      }
+    },
+
+    playHandle() {
+      this.player.forwardPlay();
+    },
+
+    pauseHandle() {
+      this.player.pause();
+    },
+
+    progressChangeHandle(e) {
+      this.player.setIndex(e.target.value * 1);
+    },
 
     _initMap () {
       this.map = new Map({
@@ -92,20 +140,47 @@ export default {
     },
 
     _initPlayer() {
-      let {map} = this;
+      let {map, speed} = this;
+
       let featureManagerPool = FeatureManagerPool.newInstance(map);
+      let infoWindowManager = InfoWindowManager.newInstance(featureManagerPool);
       let trackFeatureManager = FeatureManagerFactory.createTrackManager();
-      let pointFeatureManager = FeatureManagerFactory.createPointManager();
+      let pointFeatureManager = FeatureManagerFactory.createPointManager(infoWindowManager);
       featureManagerPool.add(trackFeatureManager).add(pointFeatureManager);
-      let historyTrackPlayer = new HistoryTrackPlayer({step: 0.0001, featureManagerPool});
+      let historyTrackPlayer = new HistoryTrackPlayer({step: 0.0001, interval: 630 - 30 * speed, featureManagerPool});
+      this.manager = infoWindowManager;
       this.player = historyTrackPlayer;
     },
 
-    _startRun() {
-      this.player.setTrack(track).forwardPlay();
+    _setTrack() {
+      this.player.setTrack(track);
     }
 
+  },
+
+  computed: {
+
+    playerLength() {
+      return this.player ? this.player.length() - 1 : 0;
+    },
+
+    playerValue() {
+      return this.player ? this.player.value() : undefined;
+    },
+
+    playerStatus() {
+      return this.player ? this.player.playing() : false;
+    }
+
+  },
+
+  watch: {
+    playerValue(nowVal, oldVal) {
+      this.progress = nowVal.index;
+      this.attribute = nowVal.attribute;
+    }
   }
+
 };
 </script>
 

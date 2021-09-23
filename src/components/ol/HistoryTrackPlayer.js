@@ -25,12 +25,14 @@ class HistoryTrackPlayer {
      *
      * @param step 步长(默认50米, 若设置了该值，将平滑移动轨迹点, 设置为false时不进行平滑移动效果处理)
      * @param interval 定时器时间间隔(默认50ms)
+     * @param change _index
      * @param featureType 要素管理器类型
      * @param featureManagerPool 要素管理器池
      */
     constructor({
         step = 50,
         interval = 50,
+      /*  change,*/
         featureType = DEFAULT_FEATURE_TYPE,
         featureManagerPool
     }) {
@@ -43,10 +45,38 @@ class HistoryTrackPlayer {
         Assert.isTrue(featureManagerPool.has(featureType.point), "未找到轨迹点要素管理器");
 
         //
-        this._data = [];
         this._index = 0;
+        this._data = [];
         this._timer = undefined;
         this._type = undefined;
+    }
+
+    /**
+     * 获取轨迹切分后的总长度
+     * @returns {number}
+     */
+    length() {
+        return this._data.length;
+    }
+
+    /**
+     * 获取当前值
+     * @returns {{data: (*|undefined), index: number}}
+     */
+    value() {
+        let {_index, _data} = this;
+        return {
+            index: _index,
+            attribute: _index < _data.length ? _data[_index] : undefined
+        };
+    }
+
+    /**
+     * 获取播放器状态
+     * @returns {boolean}
+     */
+    playing() {
+        return this._timer !== undefined;
     }
 
     /**
@@ -68,11 +98,31 @@ class HistoryTrackPlayer {
         //停止播放
         this.pause();
         //重置数据
-        this._data = [];
         this._index = 0;
+        this._data = [];
         //清空轨迹线、起点、终端、移动点
         trackFeatureManager.clear();
         pointFeatureManager.clear();
+        return this;
+    }
+
+    /**
+     * 重置播放器参数
+     * @param step
+     * @param interval
+     * @param featureType
+     */
+    reset({
+        step = 50,
+        interval = 50,
+        featureType = DEFAULT_FEATURE_TYPE
+    }) {
+        this.destroy();
+        this._step = step;
+        this._interval = interval;
+        this._featureType = featureType;
+        Assert.isTrue(this._featureManagerPool.has(featureType.track), "未找到轨迹线要素管理器");
+        Assert.isTrue(this._featureManagerPool.has(featureType.point), "未找到轨迹点要素管理器");
         return this;
     }
 
@@ -111,9 +161,9 @@ class HistoryTrackPlayer {
      */
     forwardPlay() {
         this.pause();
-        let index = this._index, options = {_data: this._data, pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.FORWARD};
+        let options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.FORWARD};
         this._timer = setInterval(() => {
-            this.setIndex(++index, options);
+            this.setIndex(this._index + 1, options);
         }, this._interval);
         this._type = PLAY_TYPE.FORWARD;
         return this;
@@ -124,9 +174,9 @@ class HistoryTrackPlayer {
      */
     backwardPlay() {
         this.pause();
-        let index = this._index, options = {_data: this._data, pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.BACKWARD};
+        let options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.BACKWARD};
         this._timer = setInterval(() => {
-            this.setIndex(--index, options);
+            this.setIndex(this._index - 1, options);
         }, this._interval);
         this._type = PLAY_TYPE.BACKWARD;
         return this;
@@ -136,7 +186,7 @@ class HistoryTrackPlayer {
      * 暂停
      */
     pause() {
-        this._timer&&(clearInterval(this._timer), this._timer = false, this._type = undefined);
+        this._timer&&(clearInterval(this._timer), this._timer = undefined, this._type = undefined);
         return this;
     }
 
@@ -162,10 +212,12 @@ class HistoryTrackPlayer {
      * @param _data
      * @param pointFeatureManager
      */
-    setIndex(index, {_data = this._data, pointFeatureManager = this._featureManagerPool.get(this._featureType.point), type}) {
+    setIndex(index, options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point)}) {
+        Assert.isTrue(typeof index === 'number', "index必须是一个数字");
+        let {pointFeatureManager, type} = options;
         index < 0 && (index = 0, type === PLAY_TYPE.BACKWARD && this.pause());
-        index > _data.length - 1 && (index = _data.length - 1, type === PLAY_TYPE.FORWARD && this.pause());
-        pointFeatureManager.addFeature(_data[index]);
+        index > this._data.length - 1 && (index = this._data.length - 1, type === PLAY_TYPE.FORWARD && this.pause());
+        pointFeatureManager.addFeature(this._data[index]);
         this._index = index;
         return this;
     }

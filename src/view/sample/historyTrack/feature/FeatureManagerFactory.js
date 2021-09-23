@@ -1,6 +1,8 @@
 import FeatureManager from '@/components/ol/FeatureManager';
 import {MultiLineString, Point} from 'ol/geom';
 
+import InfoWindow from './InfoWindow';
+
 import {Icon, Stroke, Style} from 'ol/style';
 
 class FeatureManagerFactory {
@@ -45,22 +47,33 @@ class FeatureManagerFactory {
     return trackFeatureManager;
   }
 
-  static createPointManager () {
+  static createPointManager (manager) {
     return new FeatureManager({
       type: 'history_point',
       key: attributes => attributes._id,
       geometry: ({_coordinate}) => {
         return new Point(_coordinate);
       },
+      infoWindow: {
+        manager,
+        template: InfoWindow,
+        offset: ({_id}) => {
+          let offset = [0, -48];
+          _id === 'active' && (offset = [0, -60]);
+          return offset;
+        }
+      },
       style: function(feature) {
         let id = feature.getId();
+        let anchor = [0.5, 48];
+        id === 'active' && (anchor = [0.5, 60]);
         return [
           new Style({
             image: new Icon({
               rotation: 0,
               src: `./assets/track/${id}.png`,
               anchorYUnits: 'pixels',
-              anchor: [0.5, 45]
+              anchor
             })
           })
         ]

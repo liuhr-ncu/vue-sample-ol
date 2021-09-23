@@ -52,7 +52,8 @@ class FeatureManagerFactory {
       },
       infoWindow: {
         manager,
-        template: PersonInfoWindow
+        template: PersonInfoWindow,
+        offset: [0, -45]
       },
       style: commonStyle,
       cluster: false
@@ -68,7 +69,8 @@ class FeatureManagerFactory {
       },
       infoWindow: {
         manager,
-        template: PlatInfoWindow
+        template: PlatInfoWindow,
+        offset: [0, -45]
       },
       style: commonStyle
     });
@@ -81,10 +83,11 @@ class FeatureManagerFactory {
         let {lng, lat} = attributes;
         return new Point([lng, lat]);
       },
-      /*infoWindow: {
+      infoWindow: {
         manager,
-        template: ShipInfoWindow
-      },*/
+        template: ShipInfoWindow,
+        offset: [0, -45]
+      },
       style: commonStyle
     });
   }

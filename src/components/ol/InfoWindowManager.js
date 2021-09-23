@@ -79,6 +79,9 @@ class InfoWindowManager {
     }
     //打开要素
     this._feature = feature;
+    let offset = featureManager.getOffset(feature);
+    this._overlay.setOffset(offset);
+
     //打开的要素
     let open = {type, attributes: this.getAttributes()}, data = {open, close};
     //触发弹窗open事件
@@ -186,8 +189,7 @@ class InfoWindowManager {
     _overlay = new Overlay({
       element: $el,
       positioning: 'bottom-center',
-      autoPan: false,
-      offset: [0, -45]
+      autoPan: false
     });
     map.addOverlay(_overlay);
     map.on('singleclick', e => {
