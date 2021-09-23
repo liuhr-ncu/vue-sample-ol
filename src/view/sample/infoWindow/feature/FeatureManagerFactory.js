@@ -13,9 +13,8 @@ const FEATURE_TYPE = {
   SHIP: 'ship'
 };
 
-const commonStyle = function (feature) {
+const commonStyle = function (feature, type) {
   let attributes = this.getAttributesById(feature.getId());
-  let type = this.getType();
   let {alarm, online} = attributes;
   return [
     new Style({
@@ -55,7 +54,9 @@ class FeatureManagerFactory {
         template: PersonInfoWindow,
         offset: [0, -45]
       },
-      style: commonStyle,
+      style: function (feature) {
+        return commonStyle.call(this, feature, 'person');
+      },
       cluster: false
     });
   }
@@ -72,7 +73,9 @@ class FeatureManagerFactory {
         template: PlatInfoWindow,
         offset: [0, -45]
       },
-      style: commonStyle
+      style: function (feature) {
+        return commonStyle.call(this, feature, 'plat');
+      }
     });
   }
 
@@ -88,7 +91,9 @@ class FeatureManagerFactory {
         template: ShipInfoWindow,
         offset: [0, -45]
       },
-      style: commonStyle
+      style: function (feature) {
+        return commonStyle.call(this, feature, 'ship');
+      }
     });
   }
 

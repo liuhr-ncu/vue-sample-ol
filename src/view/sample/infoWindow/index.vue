@@ -15,6 +15,7 @@ import TileLayer from 'ol/layer/Tile';
 import FeatureManagerFactory from './feature/FeatureManagerFactory';
 import {OSM} from 'ol/source';
 import FeatureManagerPool from '@/components/ol/FeatureManagerPool';
+import FeatureManager from "@/components/ol/FeatureManager";
 
 const features = {
   person: [{
@@ -133,18 +134,26 @@ export default {
       let personFeatureManager = FeatureManagerFactory.create('person', manager);
       let platFeatureManager = FeatureManagerFactory.create('plat', manager);
       let shipFeatureManager = FeatureManagerFactory.create('ship', manager);
-      featureManagerPool.add(personFeatureManager).add(platFeatureManager).add(shipFeatureManager);
+      //聚合测试
+      let clusterPersonAndPlatFeatureManager = FeatureManager.cluster({
+        type: 'person_plat_cluster',
+        classify: ({name}) => {
+          return name.indexOf('平台') > -1 ? 'plat' : 'person';
+        }
+      }, personFeatureManager, platFeatureManager);
+
+      featureManagerPool.add(clusterPersonAndPlatFeatureManager).add(shipFeatureManager);
     },
 
     _initFeatures () {
       let {manager} = this, {person, plat, ship} = features;
       let featureManagerPool = manager.getFeatureManagerPool();
-      let personFeatureManager = featureManagerPool.get('person');
-      let platFeatureManager = featureManagerPool.get('plat');
+      let clusterPersonAndPlatFeatureManager = featureManagerPool.get('person_plat_cluster');
+      //let platFeatureManager = featureManagerPool.get('plat');
       let shipFeatureManager = featureManagerPool.get('ship');
 
-      personFeatureManager.addFeatures(person);
-      platFeatureManager.addFeatures(plat);
+      clusterPersonAndPlatFeatureManager.addFeatures([...person, ...plat]);
+      //platFeatureManager.addFeatures(plat);
       shipFeatureManager.addFeatures(ship);
     },
 

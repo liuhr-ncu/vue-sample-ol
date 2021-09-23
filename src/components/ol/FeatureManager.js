@@ -398,7 +398,7 @@ class FeatureManager {
 
     const offset = attributes => {
       let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _offset;
-      _infoWindow && (_offset = infoWindow.offset);
+      _infoWindow && (_offset = _infoWindow.offset);
       while (typeof _offset === 'function') {
         _offset = _offset.call(null, attributes);
       }
@@ -407,7 +407,7 @@ class FeatureManager {
 
     const template = attributes => {
       let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _template;
-      _infoWindow && (_template = infoWindow.template);
+      _infoWindow && (_template = _infoWindow.template);
       while (typeof _template === 'function') {
         _template = _template.call(null, attributes);
       }
