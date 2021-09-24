@@ -64,6 +64,7 @@ class FeatureManager {
   /**
    *
    * @param type
+   * @param classify
    * @param key
    * @param geometry
    * @param infoWindow
@@ -75,6 +76,7 @@ class FeatureManager {
    */
   constructor ({
     type,
+    classify,
     key = attributes => attributes.id,
     geometry,
     infoWindow,
@@ -96,14 +98,16 @@ class FeatureManager {
       distance,
       source
     }) : source;
+
     let {singleStyle, clusterStyle} = getStyles(style);
     let _style = feature => {
       let features = feature.get('features');
       if (features) {
-        return features.length === 1 ? singleStyle.call(this, features[0]) : clusterStyle.call(this, feature);
+        return features.length === 1 ? singleStyle.call(null, features[0]) : clusterStyle.call(null, feature);
       }
-      return singleStyle.call(this, feature);
+      return singleStyle.call(null, feature);
     };
+
     let layer = new VectorLayer({
       style: _style,
       source: _source,
@@ -112,6 +116,7 @@ class FeatureManager {
     });
 
     this._type = type;
+    this._classify = classify;
     this._key = key;
     this._geometry = geometry;
     this._infoWindow = infoWindow;
@@ -119,8 +124,8 @@ class FeatureManager {
     this._source = source;
     this._layer = layer;
     this._map = undefined;
-    this._data = {};
   }
+
 
   /**
    *
@@ -128,7 +133,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   addFeatures (obj) {
-    Array.isArray(obj) ? this._addFeaturesUsingArray(obj) : this._addFeaturesUsingObj(obj);
+    for (let key in obj) {
+      this.addFeature(obj[key]);
+    }
     return this;
   }
 
@@ -138,8 +145,8 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   addFeature (attributes) {
-    let {_data, _key} = this, id = _key.call(null, attributes), old = _data[id];
-    old ? this._updateFeature(attributes, old) : this._addFeature(attributes);
+    let id = this._key.call(null, attributes), feature = this.getFeatureById(id);
+    feature ? this._updateFeature(feature, attributes) : this._addFeature(id, attributes);
     return this;
   }
 
@@ -149,18 +156,14 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatures (filter) {
-    let {_type, _source, _data, _infoWindow} = this, manager, attributes, feature, type, id;
-    _infoWindow && (manager = _infoWindow.manager);
-    manager && (type = manager.getType(), id = manager.getId());
-    for (let _id in _data) {
-      attributes = _data[_id];
-      filter.call(null, attributes) && (
-        (type === _type && id === _id && manager.close()),
-        delete _data[id],
-        feature = _source.getFeatureById(_id),
-        feature && _source.removeFeature(feature)
-      );
-    }
+    let {_source, _infoWindow} = this, infoWindowManager, _feature;
+    _infoWindow && (infoWindowManager = _infoWindow.manager, _feature = infoWindowManager._feature);
+    _source.forEachFeature((feature) => {
+      if (filter.call(null, feature)) {
+        _feature === feature && infoWindowManager.close()
+        _source.removeFeature(feature);
+      }
+    });
     return this;
   }
 
@@ -170,16 +173,13 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureByIds (array) {
-    let {_type, _source, _data, _infoWindow} = this, manager, _id, feature, type, id;
-    _infoWindow && (manager = _infoWindow.manager);
-    manager && (type = manager.getType(), id = manager.getId());
-    for (let index = 0, length = array.length; index < length; index++) {
-      _id = array[index];
-      type === _type && id === _id && manager.close();
-      delete _data[_id];
-      feature = _source.getFeatureById(_id);
+    let {_source, _infoWindow} = this, infoWindowManager, _feature;
+    _infoWindow && (infoWindowManager = _infoWindow.manager, _feature = infoWindowManager._feature);
+    array.forEach( _id => {
+      let feature = _source.getFeatureById(_id);
+      _feature === feature && infoWindowManager.close();
       feature && _source.removeFeature(feature);
-    }
+    });
     return this;
   }
 
@@ -189,12 +189,10 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   removeFeatureById (_id) {
-    let {_type, _source, _data, _infoWindow} = this, manager, feature, type, id;
-    _infoWindow && (manager = _infoWindow.manager);
-    manager && (type = manager.getType(), id = manager.getId());
-    type === _type && id === _id && manager.close();
-    delete _data[_id];
-    feature = _source.getFeatureById(_id);
+    let {_source, _infoWindow} = this, infoWindowManager, _feature;
+    _infoWindow && (infoWindowManager = _infoWindow.manager, _feature = infoWindowManager._feature);
+    let feature = _source.getFeatureById(_id);
+    _feature === feature && infoWindowManager.close();
     feature && _source.removeFeature(feature);
     return this;
   }
@@ -204,11 +202,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   clear () {
-    let {_type, _source, _infoWindow} = this, manager, type;
-    _infoWindow && (manager = _infoWindow.manager);
-    manager && (type = manager.getType());
-    type === _type && manager.close();
-    this._data = {};
+    let {_type, _source, _infoWindow} = this, infoWindowManager, type;
+    _infoWindow && (infoWindowManager = _infoWindow.manager, type = infoWindowManager.getType());
+    type === _type && infoWindowManager.close();
     _source.clear();
     return this;
   }
@@ -218,10 +214,9 @@ class FeatureManager {
    * @returns {FeatureManager}
    */
   hide () {
-    let {_type, _layer, _infoWindow} = this, manager, type;
-    _infoWindow && (manager = _infoWindow.manager);
-    manager && (type = manager.getType());
-    type === _type && manager.close();
+    let {_type, _layer, _infoWindow} = this, infoWindowManager, type;
+    _infoWindow && (infoWindowManager = _infoWindow.manager, type = infoWindowManager.getType());
+    type === _type && infoWindowManager.close();
     _layer.setVisible(false);
     return this;
   }
@@ -260,12 +255,7 @@ class FeatureManager {
     _infoWindow && (offset = _infoWindow.offset);
     if (typeof offset === 'function') {
       Assert.isTrue(feature, "要素不能为空");
-      let id = feature.getId();
-      Assert.isTrue(id, "要素ID不能为空");
-      let attributes = this.getAttributesById(id);
-      do {
-        offset = offset.call(null, attributes);
-      } while (typeof offset === 'function');
+      offset = offset.call(null, feature);
     }
     offset || (offset = defaultOffset)
     return offset;
@@ -280,31 +270,9 @@ class FeatureManager {
     _infoWindow && (template = _infoWindow.template);
     if (typeof template === 'function') {
       Assert.isTrue(feature, "要素不能为空");
-      let id = feature.getId();
-      Assert.isTrue(id, "要素ID不能为空");
-      let attributes = this.getAttributesById(id);
-      do {
-        template = template.call(null, attributes);
-      } while (typeof template === 'function');
+      template = template.call(null, feature);
     }
     return template;
-  }
-
-  /**
-   *
-   * @returns {*|{}}
-   */
-  getData () {
-    return this._data;
-  }
-
-  /**
-   *
-   * @param id
-   * @returns {*}
-   */
-  getAttributesById (id) {
-    return this._data[id];
   }
 
   /**
@@ -314,15 +282,6 @@ class FeatureManager {
    */
   getFeatureById (id) {
     return this._source.getFeatureById(id);
-  }
-
-  /**
-   *
-   * @param id
-   * @returns {boolean}
-   */
-  hasFeature (id) {
-    return this._data[id] != undefined;
   }
 
   /**
@@ -396,20 +355,20 @@ class FeatureManager {
       return featureManager._geometry.call(null, attributes);
     };
 
-    const offset = attributes => {
-      let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _offset;
+    const offset = feature => {
+      let featureManager = getManagerByFeature(feature), _infoWindow = featureManager._infoWindow, _offset;
       _infoWindow && (_offset = _infoWindow.offset);
-      while (typeof _offset === 'function') {
-        _offset = _offset.call(null, attributes);
+      if (typeof _offset === 'function') {
+        _offset = _offset.call(null, feature);
       }
       return _offset;
     };
 
-    const template = attributes => {
-      let featureManager = getManagerByAttributes(attributes), _infoWindow = featureManager._infoWindow, _template;
+    const template = feature => {
+      let featureManager = getManagerByFeature(feature), _infoWindow = featureManager._infoWindow, _template;
       _infoWindow && (_template = _infoWindow.template);
-      while (typeof _template === 'function') {
-        _template = _template.call(null, attributes);
+      if (typeof _template === 'function') {
+        _template = _template.call(null, feature);
       }
       return _template;
     };
@@ -426,13 +385,14 @@ class FeatureManager {
     const style = {
       single: function (feature) {
         let featureManager = getManagerByFeature(feature);
-        return featureManager._singleStyle.call(this, feature);
+        return featureManager._singleStyle.call(null, feature);
       },
       cluster: clusterStyle
     };
 
     return new FeatureManager({
       type,
+      classify,
       key,
       geometry,
       infoWindow,
@@ -446,54 +406,35 @@ class FeatureManager {
   }
 
   /**
-   *
-   * @param array
-   * @private
-   */
-  _addFeaturesUsingArray (array) {
-    for (let index = 0, length = array.length; index < length; index++) {
-      this.addFeature(array[index]);
-    }
-  }
-
-  /**
-   *
-   * @param obj
-   * @private
-   */
-  _addFeaturesUsingObj (obj) {
-    for (let i in obj) {
-      this.addFeature(obj[i]);
-    }
-  }
-
-  /**
-   *
+   * attributes中不能有_type字段(预留标记要素类型)
+   * @param id
    * @param attributes
    * @private
    */
-  _addFeature (attributes) {
-    let {_type, _key, _source, _geometry, _data} = this, id = _key.call(null, attributes);
-    _data[id] = attributes;
+  _addFeature (id, attributes) {
+    let {_type, _classify, _source, _geometry} = this;
+    Object.assign(attributes, {_type: _classify ? _classify.call(null, attributes) : _type});
+
     const feature = new Feature({
       geometry: _geometry.call(null, attributes)
     });
     feature.setId(id);
-    feature.set('type', _type);
+    feature.set('type', _type, true);
+    feature.set('attributes', attributes, true);
     _source.addFeature(feature);
   }
 
   /**
-   *
+   * attributes中不能有_type字段(预留标记要素类型,更新时不会再更新_type)
+   * @param feature
    * @param attributes
-   * @param old
    * @private
    */
-  _updateFeature (attributes, old) {
-    Object.assign(old, attributes);
-    let {_key, _source, _geometry} = this, id = _key.call(null, attributes);
-    const feature = _source.getFeatureById(id);
-    feature.setGeometry(_geometry.call(null, old));
+  _updateFeature (feature, attributes) {
+    let {_geometry} = this;
+    const _attributes = feature.get('attributes');
+    Object.assign(_attributes, attributes);
+    feature.setGeometry(_geometry.call(null, _attributes));
   }
 
   /**

@@ -73,18 +73,15 @@ class InfoWindowManager {
     }
 
     //被关闭的要素
-    let close = undefined;
-    if (this._feature) {
-      close = {type: this.getType(), attributes: this.getAttributes()};
-    }
-    //打开要素
+    let close = this._feature;
+    //要打开的要素
     this._feature = feature;
+    //调整弹窗的offset
     let offset = featureManager.getOffset(feature);
     this._overlay.setOffset(offset);
 
-    //打开的要素
-    let open = {type, attributes: this.getAttributes()}, data = {open, close};
     //触发弹窗open事件
+    let data = {open: feature, close};
     this.dispatchEvent({type: 'infoWindow.open', data, render: true});
     return this;
   }
@@ -94,7 +91,7 @@ class InfoWindowManager {
    * @returns {InfoWindowManager}
    */
   close () {
-    let type = this.getType(), attributes = this.getAttributes(), data = {type, attributes};
+    let data = this._feature;
     this._feature = undefined;
     //触发弹窗close事件
     this.dispatchEvent({type: 'infoWindow.close', data, render: true});
@@ -116,15 +113,6 @@ class InfoWindowManager {
   getType () {
     let {_feature} = this;
     return _feature ? _feature.get('type') : undefined;
-  }
-
-  /**
-   * 获取当前弹窗要素id
-   * @returns {*|undefined}
-   */
-  getId () {
-    let {_feature} = this;
-    return _feature ? _feature.getId() : undefined;
   }
 
   /**
@@ -152,10 +140,9 @@ class InfoWindowManager {
    * @returns {*}
    */
   getAttributes () {
-    let id = this.getId();
-    Assert.isTrue(id, '要素ID不能为空');
-    let featureManager = this.getFeatureManager();
-    return featureManager.getAttributesById(id);
+    let {_feature} = this;
+    Assert.isTrue(_feature, '要素不能为空');
+    return _feature.get('attributes');
   }
 
   /**

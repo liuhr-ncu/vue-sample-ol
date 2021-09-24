@@ -13,14 +13,14 @@ const FEATURE_TYPE = {
   SHIP: 'ship'
 };
 
-const commonStyle = function (feature, type) {
-  let attributes = this.getAttributesById(feature.getId());
-  let {alarm, online} = attributes;
+const commonStyle = function (feature) {
+  let attributes = feature.get('attributes');
+  let {alarm, online, _type} = attributes;
   return [
     new Style({
       image: new Icon({
         rotation: 0,
-        src: `./assets/feature/${type}/${alarm ? 'alarm' : (online ? 'online' : 'outline')}.png`,
+        src: `./assets/feature/${_type}/${alarm ? 'alarm' : (online ? 'online' : 'outline')}.png`,
         anchorYUnits: 'pixels',
         anchor: [0.5, 47]
       })
@@ -54,9 +54,7 @@ class FeatureManagerFactory {
         template: PersonInfoWindow,
         offset: [0, -45]
       },
-      style: function (feature) {
-        return commonStyle.call(this, feature, 'person');
-      },
+      style: commonStyle,
       cluster: false
     });
   }
@@ -73,9 +71,7 @@ class FeatureManagerFactory {
         template: PlatInfoWindow,
         offset: [0, -45]
       },
-      style: function (feature) {
-        return commonStyle.call(this, feature, 'plat');
-      }
+      style: commonStyle
     });
   }
 
@@ -91,9 +87,7 @@ class FeatureManagerFactory {
         template: ShipInfoWindow,
         offset: [0, -45]
       },
-      style: function (feature) {
-        return commonStyle.call(this, feature, 'ship');
-      }
+      style: commonStyle
     });
   }
 

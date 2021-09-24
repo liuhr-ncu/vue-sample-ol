@@ -57,13 +57,14 @@ class FeatureManagerFactory {
       infoWindow: {
         manager,
         template: InfoWindow,
-        offset: ({_id}) => {
+        offset: feature => {
+          let id = feature.getId();
           let offset = [0, -48];
-          _id === 'active' && (offset = [0, -60]);
+          id === 'active' && (offset = [0, -60]);
           return offset;
         }
       },
-      style: function(feature) {
+      style: feature => {
         let id = feature.getId();
         let anchor = [0.5, 48];
         id === 'active' && (anchor = [0.5, 60]);
