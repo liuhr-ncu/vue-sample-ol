@@ -5,7 +5,7 @@ import {Assert} from './CommonUtils';
 class InfoWindowManager {
 
   /**
-   * 构造函数实例化
+   * 弹窗管理器构造函数
    * @param featureManagerPool
    * @param events
    */
@@ -18,7 +18,7 @@ class InfoWindowManager {
   }
 
   /**
-   * 静态函数实例化
+   * 创建一个弹窗管理器
    * @param featureManagerPool
    * @param events
    * @returns {InfoWindowManager}
@@ -29,7 +29,10 @@ class InfoWindowManager {
 
   /**
    * 事件派发统一入口
-   * @param e
+   * @param type
+   * @param data
+   * @param render
+   * @returns {InfoWindowManager}
    */
   dispatchEvent ({type, data, render = false}) {
     Assert.isTrue(type, '请指定弹窗派发的事件类型!');
@@ -43,7 +46,7 @@ class InfoWindowManager {
   }
 
   /**
-   * 打开某个要素的弹窗（两种打开方式)
+   * 打开某个要素的弹窗（两种打开方式), open({feature}) | open({type, id})
    * @param feature 要素
    * @param type 要素类型
    * @param id 要素ID

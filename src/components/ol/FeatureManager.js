@@ -42,7 +42,7 @@ const defaultClusterStyle = feature => {
 };
 
 /**
- * 图层样式获取(单要素样式、聚合要素样式)
+ * 要素样式获取(单要素样式、聚合要素样式)
  * @param style
  */
 const getStyles = style => {
@@ -57,12 +57,16 @@ const getStyles = style => {
   return {singleStyle, clusterStyle};
 };
 
+/**
+ * 要素弹窗默认的offset
+ * @type {number[]}
+ */
 const defaultOffset = [0, 0];
 
 class FeatureManager {
 
   /**
-   *
+   * 要素管理器构造函数
    * @param type
    * @param classify
    * @param key
@@ -91,9 +95,7 @@ class FeatureManager {
     Assert.isTrue(!infoWindow || (infoWindow.template && infoWindow.manager), '必须同时提供弹窗模板及弹窗管理器');
     Assert.isTrue(style, '要素样式不能为空');
 
-    let source = new VectorSource({
-      features: []
-    });
+    let source = new VectorSource();
     let _source = cluster ? new Cluster({
       distance,
       source
@@ -128,7 +130,7 @@ class FeatureManager {
 
 
   /**
-   *
+   * 添加或更新多个要素
    * @param obj
    * @returns {FeatureManager}
    */
@@ -140,7 +142,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 添加或更新单个要素
    * @param attributes
    * @returns {FeatureManager}
    */
@@ -151,7 +153,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 根据要素过滤器移除要素
    * @param filter
    * @returns {FeatureManager}
    */
@@ -168,7 +170,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 根据要素ID移除多个要素
    * @param array
    * @returns {FeatureManager}
    */
@@ -184,7 +186,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 根据要素ID移除单个要素
    * @param _id
    * @returns {FeatureManager}
    */
@@ -198,7 +200,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 清除所有要素
    * @returns {FeatureManager}
    */
   clear () {
@@ -210,7 +212,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 隐藏所有要素
    * @returns {FeatureManager}
    */
   hide () {
@@ -222,7 +224,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 显示所有要素
    * @returns {FeatureManager}
    */
   show () {
@@ -231,14 +233,14 @@ class FeatureManager {
   }
 
   /**
-   * 重绘
+   * 重绘要素管理器中的要素
    */
   changed() {
     this._source.changed();
   }
 
   /**
-   *
+   * 获取要素管理器类型
    * @returns {*}
    */
   getType () {
@@ -246,7 +248,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 获取要素弹窗offset
    * @param feature
    * @returns {*}
    */
@@ -262,7 +264,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 获取要素弹窗模板
    * @returns {*}
    */
   getTemplate (feature) {
@@ -276,7 +278,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 根据要素ID查询要素
    * @param id
    * @returns {import("../Feature.js").default<Geometry>}
    */
@@ -285,7 +287,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 判断要素管理器是否已使用
    * @returns {boolean}
    */
   isUsed () {
@@ -293,7 +295,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 获取地图
    * @returns {*}
    */
   getMap () {
@@ -301,7 +303,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 将多个未使用的要素管理器聚合到一起
    * @param type
    * @param classify
    * @param separator
@@ -309,7 +311,7 @@ class FeatureManager {
    * @param zIndex
    * @param distance
    * @param visible
-   * @param managers
+   * @param featureManagers
    * @returns {FeatureManager}
    */
   static cluster ({
@@ -406,26 +408,25 @@ class FeatureManager {
   }
 
   /**
-   * attributes中不能有_type字段(预留标记要素类型)
+   * 添加要素, attributes中不能有_type字段(预留标记要素类型)
    * @param id
    * @param attributes
    * @private
    */
   _addFeature (id, attributes) {
     let {_type, _classify, _source, _geometry} = this;
-    Object.assign(attributes, {_type: _classify ? _classify.call(null, attributes) : _type});
-
     const feature = new Feature({
       geometry: _geometry.call(null, attributes)
     });
     feature.setId(id);
     feature.set('type', _type, true);
+    feature.set('classify', _classify ? _classify.call(null, attributes) : _type, true);
     feature.set('attributes', attributes, true);
     _source.addFeature(feature);
   }
 
   /**
-   * attributes中不能有_type字段(预留标记要素类型,更新时不会再更新_type)
+   * 更新要素
    * @param feature
    * @param attributes
    * @private
@@ -438,7 +439,7 @@ class FeatureManager {
   }
 
   /**
-   *
+   * 使用到指定的地图上
    * @param map
    * @returns {FeatureManager}
    * @private

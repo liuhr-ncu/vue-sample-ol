@@ -161,7 +161,7 @@ class HistoryTrackPlayer {
      */
     forwardPlay() {
         this.pause();
-        let options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.FORWARD};
+        const options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.FORWARD};
         this._timer = setInterval(() => {
             this.setIndex(this._index + 1, options);
         }, this._interval);
@@ -174,7 +174,7 @@ class HistoryTrackPlayer {
      */
     backwardPlay() {
         this.pause();
-        let options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.BACKWARD};
+        const options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point), type: PLAY_TYPE.BACKWARD};
         this._timer = setInterval(() => {
             this.setIndex(this._index - 1, options);
         }, this._interval);
@@ -214,10 +214,10 @@ class HistoryTrackPlayer {
      */
     setIndex(index, options = {pointFeatureManager: this._featureManagerPool.get(this._featureType.point)}) {
         Assert.isTrue(typeof index === 'number', "index必须是一个数字");
-        let {pointFeatureManager, type} = options;
-        index < 0 && (index = 0, type === PLAY_TYPE.BACKWARD && this.pause());
-        index > this._data.length - 1 && (index = this._data.length - 1, type === PLAY_TYPE.FORWARD && this.pause());
-        pointFeatureManager.addFeature(this._data[index]);
+        let {pointFeatureManager, type} = options, length = this._data.length;
+        index <= 0 && (index = 0, type === PLAY_TYPE.BACKWARD && this.pause());
+        index >= length - 1 && (index = length - 1, type === PLAY_TYPE.FORWARD && this.pause());
+        length > 0 && pointFeatureManager.addFeature(this._data[index]);
         this._index = index;
         return this;
     }
@@ -288,10 +288,12 @@ class HistoryTrackPlayer {
             surplus -= distance;
             index++;
         });
-        attribute = track[index], _coordinate = lineString.getLastCoordinate();
-        data.push(Object.assign({}, attribute, {_id: FEATURE_ID.ACTIVE, _coordinate}));
+        if (surplus>0) {
+            attribute = track[index], _coordinate = lineString.getLastCoordinate();
+            data.push(Object.assign({}, attribute, {_id: FEATURE_ID.ACTIVE, _coordinate}));
+        }
     }
 
 }
 
-export default HistoryTrackPlayer;
+export {HistoryTrackPlayer, FEATURE_ID, PLAY_TYPE};

@@ -74,10 +74,10 @@ export default {
       manager: undefined,
       events: {
         'infoWindow.open': ({data}) => {
-          alert("打开弹窗:" + data.open.get('attributes')._type)
+          alert("打开弹窗:" + data.open.get('classify'))
         },
         'infoWindow.close': ({data}) => {
-          alert("关闭弹窗:" + data.get('attributes')._type)
+          alert("关闭弹窗:" + data.get('classify'))
         },
         'person.click': ({data}) => {
           alert("单击人员:" + data.name)

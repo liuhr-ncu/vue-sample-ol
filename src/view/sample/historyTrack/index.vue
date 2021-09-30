@@ -4,6 +4,7 @@
     <info-window :manager="manager"></info-window>
     <div style="position: absolute;top: 20px;left: 90px;width: 700px;background: #9e9e9eed;padding: 8px;border-radius: 5px;">
       <input type="range" step="1" min="0" :max="playerLength" v-model="progress" v-on:input="progressChangeHandle" style="width: 700px"/>
+      <button @click="loadTrack">加载</button>
       <button @click="speedUpHandle">速度+</button>
       <button v-if="playerStatus" @click="pauseHandle">暂停</button>
       <button v-else @click="playHandle">播放</button>
@@ -27,7 +28,7 @@ import InfoWindowManager from '@/components/ol/InfoWindowManager';
 import FeatureManagerFactory from './feature/FeatureManagerFactory';
 import {OSM} from 'ol/source';
 import FeatureManagerPool from '@/components/ol/FeatureManagerPool';
-import HistoryTrackPlayer from "@/components/ol/HistoryTrackPlayer";
+import {HistoryTrackPlayer} from "@/components/ol/HistoryTrackPlayer";
 
 
 const track = [
@@ -89,10 +90,12 @@ export default {
     this._initMap();
     //初始轨迹播放器
     this._initPlayer();
-    //设置轨迹
-    this._setTrack();
   },
   methods: {
+
+    loadTrack() {
+      this.player.setTrack(track);
+    },
 
     speedUpHandle() {
       let {speed} = this;
@@ -102,6 +105,7 @@ export default {
         this.player.setInterval(630 - 30 * speed);
       }
     },
+
     speedDownHandle() {
       let {speed} = this;
       if (speed > 1) {
@@ -150,10 +154,6 @@ export default {
       let historyTrackPlayer = new HistoryTrackPlayer({step: 0.0001, interval: 630 - 30 * speed, featureManagerPool});
       this.manager = infoWindowManager;
       this.player = historyTrackPlayer;
-    },
-
-    _setTrack() {
-      this.player.setTrack(track);
     }
 
   },

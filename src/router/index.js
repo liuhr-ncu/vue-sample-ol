@@ -4,6 +4,7 @@ import Vue from 'vue'
 
 import InfoWindowSample from "../view/sample/infoWindow/index";
 import HistoryTrackSample from "../view/sample/historyTrack/index";
+import DrawToolSample from "../view/sample/drawTool/index";
 
 // 1.通过Vue.use(插件), 安装插件
 Vue.use(VueRouter)
@@ -22,6 +23,10 @@ const routes = [
     {
         path: '/history-track-sample',
         component: HistoryTrackSample
+    },
+    {
+        path: '/draw-tool-sample',
+        component: DrawToolSample
     }
 ]
 const router = new VueRouter({

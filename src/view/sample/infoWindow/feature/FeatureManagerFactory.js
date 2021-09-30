@@ -14,13 +14,13 @@ const FEATURE_TYPE = {
 };
 
 const commonStyle = function (feature) {
-  let attributes = feature.get('attributes');
-  let {alarm, online, _type} = attributes;
+  let attributes = feature.get('attributes'), classify = feature.get('classify');
+  let {alarm, online} = attributes;
   return [
     new Style({
       image: new Icon({
         rotation: 0,
-        src: `./assets/feature/${_type}/${alarm ? 'alarm' : (online ? 'online' : 'outline')}.png`,
+        src: `./assets/feature/${classify}/${alarm ? 'alarm' : (online ? 'online' : 'outline')}.png`,
         anchorYUnits: 'pixels',
         anchor: [0.5, 47]
       })

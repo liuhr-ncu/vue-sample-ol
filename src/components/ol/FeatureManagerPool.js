@@ -3,7 +3,7 @@ import {Assert} from './CommonUtils';
 class FeatureManagerPool {
 
   /**
-   *
+   * 要素管理器池构造函数
    * @param map
    */
   constructor (map) {
@@ -13,7 +13,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 创建一个要素管理器池
    * @param map
    * @returns {FeatureManagerPool}
    */
@@ -22,7 +22,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 添加要素管理器
    * @param featureManager
    * @returns {FeatureManagerPool}
    */
@@ -34,7 +34,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 获取某类要素管理器
    * @param type
    * @returns {*}
    */
@@ -43,7 +43,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 判断是否已有某类要素管理器
    * @param type
    * @returns {boolean}
    */
@@ -52,7 +52,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 获取地图
    * @returns {*}
    */
   getMap () {
@@ -60,7 +60,7 @@ class FeatureManagerPool {
   }
 
   /**
-   *
+   * 只显示某类要素
    * @param type
    */
   onlyShow (type) {

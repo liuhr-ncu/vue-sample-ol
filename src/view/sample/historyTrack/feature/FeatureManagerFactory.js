@@ -1,4 +1,5 @@
 import FeatureManager from '@/components/ol/FeatureManager';
+import {FEATURE_ID} from '@/components/ol/HistoryTrackPlayer';
 import {MultiLineString, Point} from 'ol/geom';
 
 import InfoWindow from './InfoWindow';
@@ -60,14 +61,14 @@ class FeatureManagerFactory {
         offset: feature => {
           let id = feature.getId();
           let offset = [0, -48];
-          id === 'active' && (offset = [0, -60]);
+          id === FEATURE_ID.ACTIVE && (offset = [0, -60]);
           return offset;
         }
       },
       style: feature => {
         let id = feature.getId();
         let anchor = [0.5, 48];
-        id === 'active' && (anchor = [0.5, 60]);
+        id === FEATURE_ID.ACTIVE && (anchor = [0.5, 60]);
         return [
           new Style({
             image: new Icon({
