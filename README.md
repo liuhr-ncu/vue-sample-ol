@@ -24,9 +24,9 @@ npm run lint
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
 
-#Openlayers地图组件封装说明文档
+# Openlayers地图组件封装说明文档
 
-##一、地图组件使用示例
+## 一、地图组件使用示例
 
 ```vue
   <template>
@@ -83,10 +83,10 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ```
 
 
-##二、主要类说明
+## 二、主要类说明
 
 
-###1、FeatureManager
+### 1、FeatureManager
 |方法名|传入参数|返回值|方法说明|
 |:---:|:---:|:---:|:---:|
 |addFeature|attributes &#124; [attributes]|FeatureManager|添加一个或多个要素|
