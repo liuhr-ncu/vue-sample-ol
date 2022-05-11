@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+        "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg class="icon" width="200px" height="200.00px" viewBox="0 0 1024 1024" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            .yudi{fill: #ccc;}
+        </style>
+    </defs>
+    <path class="yudi" d="M512 0a1168 1168 0 0 0 86.688 222.816C687.424 378.944 832 617.184 832 728.608 832 891.744 688.736 1024 512 1024S192 891.744 192 728.608c0-105.376 129.344-325.632 229.408-504.768A1524.64 1524.64 0 0 0 512 0z"/>
+</svg>
