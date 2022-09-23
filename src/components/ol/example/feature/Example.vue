@@ -19,7 +19,7 @@
 
 
   import OlMap from "../../map/OlMap";
-  import {FeatureType, FeatureManagerFactory} from "../feature/FeatureManagerFactory";
+  import {FeatureType, FeatureManagerFactory} from "./FeatureManagerFactory";
 
   export default {
     name: "Example",
